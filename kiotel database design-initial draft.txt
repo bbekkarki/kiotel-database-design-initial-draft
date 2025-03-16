@@ -1,0 +1,336 @@
+1. Hotel Schema 
+{
+  name: String,
+  timezone: String,
+  checkInTime: { type: String, default: "15:00" },
+  checkOutTime: { type: String, default: "11:00" },
+  status: { type: String, enum: ["active", "inactive"] },
+  currency: { type: String, default: "USD" },
+  organizationID: String unique: true,
+  properties: [{ type: "ObjectId", ref: "Property" }]
+}
+2. Property Schema 
+{
+  propertyID: { type: String, unique: true },
+  name: String,
+  code: String,
+  address: {
+    street: String,
+    city: String,
+    state: String,
+    country: String,
+    zipCode: String
+  },
+  contact: {
+    phone: String,
+    email: String
+  },
+  propertyPolicy: String,
+  propertyStatus: { type: String, enum: ["active", "inactive"] },
+  website: String,
+  language: String,
+  currency: String,
+  max_occupancy: Number,
+  business_day: Date,
+  guarantee_policy: String,
+  general_policy: String,
+  payment_processing: {
+    enabled: Boolean,
+    gateway: String,
+    currency: String,
+    api_key: String,
+    transaction_fee: Number
+  },
+  amenities: [String],
+  website_config: {
+    property_website_images: {
+      BARS: [String],
+      ACTIVITIES: [String],
+      TRANSPORTATION: [String],
+      ENTERTAINMENT: [String],
+      ATTRACTION: [String],
+      TOURS: [String],
+      GALLERY_IMAGES: [String]
+    }
+  },
+  roomTypes: [{ type: "ObjectId", ref: "RoomType" }],
+  rooms: [{ type: "ObjectId", ref: "Room" }]
+}
+
+3. User Schema (Staff)
+{
+  firstName: String,
+  lastName: String,
+  email: { type: String, unique: true },
+  passwordHash: String,required,
+  role: { type: String, enum: ["admin", "manager", "front_desk", "housekeeping"] },
+  hotel: { type: "ObjectId", ref: "Hotel" },
+  permissions: [String],
+  lastLogin: Date
+}
+4. Guest Schema 
+{
+  firstName: String,
+  lastName: String,
+  email: { type: String, unique: true },
+  phone: String unique: true,
+  gender: String,
+  address: {
+    street: String,
+    city: String,
+    state: String,
+    country: String,
+    zipCode: String
+  },
+  identification: {
+    identificationFirstName: String,
+    identificationLastName: String,
+    type: String,
+    number: String,
+    expiry: Date,
+    issuingCountry: String
+  },
+  preferences: [String],
+  documents: [{ type: "ObjectId", ref: "Document" }],
+  isMainGuest: Boolean,
+  request_id: String,
+ rooms: [{ type: "ObjectId", ref: "Room" }],
+assignedRooms: [{ type: "ObjectId", ref: "Room" }],
+unassignedRooms: [{ type: "ObjectId", ref: "Room" }],
+
+}
+
+
+5. RoomType Schema
+{
+ "property": { "type": "ObjectId", "ref": "Property"  unique: true},
+  name: String,
+  code: String,
+  nameShort: String,
+  roomTypeId:String,Unique,
+  description: String,
+  baseOccupancy: Number,
+  maxOccupancy: Number,
+  bedCount: Number,
+  smoking: Boolean,
+  basePrice: Number,
+  amenities: [String],
+  images: [{ url: String, caption: String }],
+  rateCodes: [{ type: "ObjectId", ref: "RateCode" }],
+  totalUnits: Number,
+  adultsIncluded: Number,
+  childrenIncluded: Number
+}
+
+
+6. Room Schema 
+{
+  roomID: { type: String, unique: true },
+  name: String,
+  floor: Number,
+  roomType: { type: "string", ref: "RoomType" },
+  status: { type: String, enum: ["available", "occupied", "maintenance"] },
+  features: [String],
+  isBooked: Boolean
+}
+
+
+7. Reservation Schema 
+{
+  confirmationNo: String unique: true,
+  Charges:  { type: ObjectId, ref: Charge },
+  reservationID: String unique: true,
+  guests: [{ type: "ObjectId", ref: "Guest" }],
+  property: { type: "ObjectId", ref: "Property" },
+  roomType: { type: "ObjectId", ref: "RoomType" },
+  rateCode: { type: "ObjectId", ref: "RateCode" },
+  rooms: [{ type: "ObjectId", ref: "Room" }],
+  checkInDate: Date,
+  checkOutDate: Date,
+  adults: { type: Number, default: 1 },
+  children: { type: Number, default: 0 },
+  totalAmount: Number,
+  paymentStatus: { type: String, enum: ["Pending", "Paid", "Cancelled", "partial"] },
+  status: { type: String, enum: ["Confirmed", "Checked-In", "Checked-Out", "Cancelled", "no-show"] },
+  subReservations: [{ type: "ObjectId", ref: "SubReservation" }],
+  source: String,
+  requests: String,
+  documents: [{ type: "ObjectId", ref: "Document" }]
+}
+
+
+8. SubReservation Schema 
+{
+  subReservationID: String, unique: true,
+  room: { type: "ObjectId", ref: "Room" },
+  status: { type: String, enum: ["confirmed", "checked_in", "checked_out", "cancelled"] },
+  guests: [{ type: "ObjectId", ref: "Guest" }]
+}
+
+
+9. Payment Schema 
+{
+  reservation: { type: "ObjectId", ref: "Reservation" },
+  totalAmount: Number,
+  status: { type: String, enum: ["Pending", "Completed", "Failed", "Refunded", "partial"] },
+  transactions: [{ type: "ObjectId", ref: "Transaction" }],
+  paymentMethod: String,
+  currency: String,
+  gateway: String,
+  transactionFee: Number,
+  paymentDetails: {
+    transactionReference: String,
+    masked_card_number: String,
+    card_brand: String,
+    card_holder_name: String.
+  card_expire_month: String,
+  card_expire_year: String,
+  gatewayResponse: String,
+  token: String
+  }
+}
+
+
+
+10. Transaction Schema 
+{
+  payment: { type: "ObjectId", ref: "Payment" },
+  amount: Number,
+  method: { type: String, enum: ["credit_card", "cash", "online"] },
+  status: { type: String, enum: ["success", "failed", "pending"] },
+  transactionId: String,
+  transactionDate: { type: Date, default: Date.now }
+}
+
+
+11. RateCode Schema 
+{
+  roomType: { type: "ObjectId", ref: "RoomType" },
+  name: String,
+  code: String,
+  priceDetails: [{
+    date: Date,
+    amount: Number,
+    taxes: [{
+      taxType: { type: "ObjectId", ref: "Tax" },
+      amount: Number
+    }]
+  }],
+  cancellationPolicy: String,
+  depositPolicy: String
+  "reservations": [{ "type": "ObjectId", "ref": "Reservation" }]
+}
+
+
+12. Tax Schema 
+{
+  name: String,
+  rate: Number,
+  type: { type: String, enum: ["Sales Tax", "VAT", "Service Tax"] },
+  description: String
+}
+
+
+13. CheckInOutLog Schema 
+{
+  reservation: { type: "ObjectId", ref: "Reservation" },
+  checkInTime: Date,
+  checkOutTime: Date,
+  staff: { type: "ObjectId", ref: "User" },
+  guestFeedback: String
+}
+
+
+14. Housekeeping Schema 
+{
+  room: { type: "ObjectId", ref: "Room" },
+  date: Date,
+  status: { type: String, enum: ["clean", "dirty", "in_progress"] },
+  notes: String
+}
+
+
+15. Document Schema 
+{
+  fileID: String,
+  fileName: String,
+  fileType: String,
+  guestDocumentType: String,
+  guestDocumentNumber: String,
+  guestDocumentIssueDate: Date,
+  guestDocumentIssuingCountry: String,
+  guestDocumentExpirationDate: Date,
+  uploadDate: { type: Date, default: Date.now },
+  uploadedBy: { type: "ObjectId", ref: "User" },
+  guest: { type: "ObjectId", ref: "Guest" },
+  reservation: { type: "ObjectId", ref: "Reservation" },
+  notes: String
+}
+
+16. BatchBooking Schema 
+{
+  batchCode: String,
+  batchName: String,
+  createdDate: Date,
+  reservations: [{ type: "ObjectId", ref: "Reservation" }],
+  status: { type: String, enum: ["Pending", "Confirmed", "Cancelled"] },
+  totalGuests: Number,
+  totalAmount: Number
+}
+
+17. Charge Schema
+
+{
+        name: String,
+        net_value: String,
+        net_value_excl_taxes: String,
+        charge_type_code: String,
+
+        },
+
+18. RequestLog Schema 
+
+{
+  _id: ObjectId,
+  request_id: UUID,
+  user_id: ObjectId,   // Reference to User who made the request
+  reservation_id: ObjectId,  // Reference to the reservation 
+  property_id: ObjectId,  // Hotel Property
+  request_type: String,   // (e.g., "payment", "check-in", "check-out", "modify_guest")
+  status: String,         // ("pending", "success", "failed", "processing")
+  response_data: Mixed,   // Store API response for debugging
+  created_at: Date,
+  updated_at: Date
+}
+
+
+19. CheckIn Schema
+Tracks the check-in event for the reservation.
+{
+ reservationId: { "type": "ObjectId", "ref": "Reservation" },
+ subReservationId:{ "type": "ObjectId", "ref": "subReservation" },
+ checkInTime: "Date",
+ checkedinRoom: [{ "type": "ObjectId", "ref": "Room" }],
+ status: String,         // ("pending", "success", "failed", "processing")
+ guestDetails: {
+    name: String,
+    phone: String,
+    email: String
+  }
+ request_id: String
+}
+
+20. CheckOut Schema
+Tracks the check-out event for the reservation.
+
+{
+  reservationId: { "type": "ObjectId", "ref": "Reservation" },
+  subReservationId:{ "type": "ObjectId", "ref": "subReservation" },
+  checkedOutRoom:[ { "type": "ObjectId", "ref": "Room" }],
+  status: String,         // ("pending", "success", "failed", "processing")
+  checkOutTime: Date,
+  guestFeedback: String
+ request_id: String
+}
+
+
