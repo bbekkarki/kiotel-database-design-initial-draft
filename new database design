@@ -1,0 +1,143 @@
+1. Hotel Schema
+Fields:
+name (String, required)
+timezone (String)
+checkInTime (String, default: "15:00")
+checkOutTime (String, default: "11:00")
+status (String, enum: ["active", "inactive"])
+currency (String, default: "USD")
+organizationID
+properties[ (array of ObjectId, ref: "Property", required)]
+ 
+2.Property Schema
+ Fields:
+ propertyID:[ string, unique]
+propertyPolicy(String)
+propertyImage (array of objects)
+address (Object: street, city, state, zip, country)
+contact (Object: phone, email)
+propertyStatus (String, enum: ["active", "inactive"]
+2. User Schema (Staff)
+Fields:
+firstName (String, required)
+lastName (String, required)
+email (String, required, unique)
+passwordHash (String, required)
+role (String, enum: ["admin", "manager", "front_desk", "housekeeping"])
+hotel (ObjectId, ref: "Hotel", required)
+permissions (Array of Strings)
+lastLogin (Date)
+3. Guest Schema
+Fields:
+firstName (String, required)
+lastName (String, required)
+email (String, required, unique)
+isMainGuest(boolean)
+phone (String)
+address (Object: street, city, country)
+gender (String)
+zip (String)
+identification (Object: type [String], number [String], expiry [Date])
+preferences (Array: e.g., "non-smoking", "high-floor")
+ documents: [{ type: ObjectId, ref: "GuestDocument" }] 
+assignedRooms:
+unassignedRooms
+Rooms 
+4. RoomType Schema
+Fields:
+name (String, required, e.g., "Deluxe King")
+ nameShort: String, // "DQ"
+roomTypeID: String
+description (String)
+basePrice (Number, required)
+capacity (Number, default: 2)
+amenities (Array: e.g., "WiFi", "TV", "mini-bar")
+propertyID: { type: String, ref: 'Property' },
+photos: [String], // Array of image URLs
+ maxGuests: Number,
+ adultsIncluded: Number,
+  childrenIncluded: Number,
+ totalUnits: Number,
+5. Room Schema
+Fields:
+  roomID: (String, required, unique per property)
+floor (Number)
+ roomTypeID: { type: String, ref: 'RoomType', required },
+status (String, enum: ["available", "occupied", "maintenance"])
+features (Array: e.g., "ocean-view", "balcony")
+isbooked(Boolean)
+6. Reservation Schema
+Fields:
+guest (array of ObjectId, ref: "Guest", required)
+ reservationID: String, // "4959853687704"
+ subReservations: [array of SubReservation, ref:subReservationID]
+ propertyID: { type: String, ref: 'Property' },
+checkInDate (Date, required)
+checkOutDate (Date, required)
+adults (Number, default: 1)
+children (Number, default: 0)
+rooms (Array of ObjectIds, ref: "Room")
+paymentMethod: String,
+status (String, enum: ["confirmed", "checked_in", "checked_out", "cancelled",”no_show”])
+totalCost (Number)
+paymentStatus (String, enum: ["pending", "partial", "paid"])
+specialRequests (String)
+source (String, e.g., "website", "walk-in", "OTA")
+documents (Array of ObjectIds, ref: "Document") → Links documents related to the reservation
+SubReservation Schema
+ subReservationID: String, // "reservation-0", "reservation-1", etc.
+  room: { type: ObjectId, ref: "Room", required }, // Assigned room
+  status: { type: String, enum: ["confirmed", "checked_in", "checked_out", "cancelled"] },
+  guests: [{ type: ObjectId, ref: "Guest" }] // Guests staying in the assigned room
+
+7.Payment Schema
+Fields:
+reservationId (ObjectId, ref: "Reservation", required) → Links payment to a specific reservation.
+totalAmount (Number, required) → Total amount to be paid.
+status (String, enum: ["pending", "partial", "paid"]) → Indicates if full payment has been made.
+transactions (Array of ObjectIds, ref: "Transaction") → Links multiple transactions to this payment.
+
+ 8.Transaction Schema
+Fields:
+payment (ObjectId, ref: "Payment", required) → References the associated payment.
+amount (Number, required) → Amount processed in this transaction.
+method (String, enum: ["credit_card", "cash", "online"], required) → Payment method used.
+status (String, enum: ["success", "failed", "pending"]) → Status of the transaction.
+transactionId (String, required) → Unique identifier for the transaction.
+transactionDate (Date, default: Date.now) → Timestamp when the transaction was made
+
+9. Rate Schema (Dynamic Pricing)
+Fields:
+roomType (ObjectId, ref: "RoomType", required)
+startDate (Date, required)
+endDate (Date, required)
+price (Number, required)
+description (String, e.g., "Peak season rate")
+10. CheckIn/Out Log Schema
+Fields:
+reservation (ObjectId, ref: "Reservation", required)
+checkInTime (Date)
+checkOutTime (Date)
+staff (ObjectId, ref: "User", optional)
+11. Housekeeping Schema
+Fields:
+room (ObjectId, ref: "Room", required)
+date (Date, required)
+status (String, enum: ["clean", "dirty", "in_progress"])
+notes (String)
+
+13.Document Schema
+Fields:
+fileID (String, required) → Unique identifier for the uploaded file
+fileName (String, required) → Name of the uploaded document
+fileType (String, required) → Allowed types: pdf, docx, png, etc.
+guestDocumentType
+guestDocumentNumber
+guestDocumentIssueDate
+guestDocumentIssuingCountry
+guestDocumentExpirationDate
+uploadDate (Date, default: Date.now) → Timestamp of the upload
+uploadedBy (ObjectId, ref: "User") → Who uploaded the document
+guest (ObjectId, ref: "Guest", optional) → If the document is related to a guest
+reservation (ObjectId, ref: "Reservation", optional) → If the document is related to a reservation
+notes (String) → Additional information about the document
